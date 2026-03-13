@@ -197,13 +197,9 @@ class DOUFetcher:
         """
         Extrai items do JSON embutido em <script id="params">.
 
-        O formato é:
-        <script id="params" type="application/json">
-        {
-            "jsonArray": "[{...}, {...}, ...]",  ← string JSON escapada
-            ...
-        }
-        </script>
+        O campo jsonArray pode vir como:
+          - string JSON escapada: "[{...}, {...}]"  → precisa json.loads()
+          - lista Python já parseada: [{...}, {...}] → usar direto
         """
         soup = BeautifulSoup(html, "html.parser")
 
@@ -212,12 +208,20 @@ class DOUFetcher:
         if script and script.string:
             try:
                 data = json.loads(script.string)
-                json_array_str = data.get("jsonArray", "[]")
-                items = json.loads(json_array_str)
+                json_array = data.get("jsonArray", [])
+
+                # jsonArray pode ser string OU lista
+                if isinstance(json_array, list):
+                    items = json_array
+                elif isinstance(json_array, str):
+                    items = json.loads(json_array)
+                else:
+                    items = []
+
                 if isinstance(items, list):
                     logger.debug(f"    jsonArray: {len(items)} itens totais")
                     return items
-            except (json.JSONDecodeError, TypeError) as e:
+            except (json.JSONDecodeError, TypeError, ValueError) as e:
                 logger.warning(f"    Erro ao parsear script#params: {e}")
 
         # Estratégia 2: qualquer <script type="application/json">
@@ -227,10 +231,16 @@ class DOUFetcher:
             try:
                 data = json.loads(tag.string)
                 if isinstance(data, dict) and "jsonArray" in data:
-                    items = json.loads(data["jsonArray"])
+                    json_array = data["jsonArray"]
+                    if isinstance(json_array, list):
+                        items = json_array
+                    elif isinstance(json_array, str):
+                        items = json.loads(json_array)
+                    else:
+                        continue
                     if isinstance(items, list):
                         return items
-            except (json.JSONDecodeError, TypeError):
+            except (json.JSONDecodeError, TypeError, ValueError):
                 continue
 
         # Estratégia 3: regex brute-force
@@ -329,10 +339,16 @@ class DOUFetcher:
             try:
                 data = json.loads(tag.string)
                 if isinstance(data, dict) and "jsonArray" in data:
-                    items = json.loads(data["jsonArray"])
+                    json_array = data["jsonArray"]
+                    if isinstance(json_array, list):
+                        items = json_array
+                    elif isinstance(json_array, str):
+                        items = json.loads(json_array)
+                    else:
+                        continue
                     total = data.get("total", len(items))
                     return items, total
-            except (json.JSONDecodeError, TypeError):
+            except (json.JSONDecodeError, TypeError, ValueError):
                 continue
 
         return [], 0
