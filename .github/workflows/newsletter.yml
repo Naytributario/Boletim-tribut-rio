@@ -1,0 +1,63 @@
+name: Boletim DOU — Envio Diário
+
+on:
+  schedule:
+    # 10:00 UTC = 07:00 BRT (Brasília, UTC-3)
+    - cron: '0 10 * * 1-5'
+
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Forçar envio mesmo em feriado?'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      test_email:
+        description: 'E-mail para teste (vazio = enviar a todos)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  enviar-boletim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: 📦 Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: 📋 Executar Boletim DOU
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          TZ: America/Sao_Paulo
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ -n "${{ github.event.inputs.test_email }}" ]; then
+            ARGS="$ARGS --test ${{ github.event.inputs.test_email }}"
+          fi
+          python main.py $ARGS
+
+      - name: 📎 Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boletim-log-${{ github.run_number }}
+          path: boletim_dou.log
+          retention-days: 30
