@@ -2,7 +2,7 @@ name: Boletim DOU — Envio Diário
 
 on:
   schedule:
-    # 10:00 UTC = 07:00 BRT (Brasília, UTC-3)
+    # 10:00 UTC = 07:00 BRT (Brasília)
     - cron: '0 10 * * 1-5'
 
   workflow_dispatch:
@@ -20,6 +20,10 @@ on:
         required: false
         default: ''
         type: string
+
+# Permissão para fazer push (publicar a página)
+permissions:
+  contents: write
 
 jobs:
   enviar-boletim:
@@ -53,6 +57,19 @@ jobs:
             ARGS="$ARGS --test ${{ github.event.inputs.test_email }}"
           fi
           python main.py $ARGS
+
+      - name: 🌐 Publicar página web
+        run: |
+          if [ -f "docs/index.html" ]; then
+            git config user.name "Boletim DOU Bot"
+            git config user.email "bot@boletim-dou.local"
+            git add docs/
+            git diff --cached --quiet || git commit -m "Atualiza boletim — $(date +%d/%m/%Y)"
+            git push
+            echo "✓ Página publicada em docs/index.html"
+          else
+            echo "Nenhuma página gerada (sem publicações)."
+          fi
 
       - name: 📎 Upload log
         if: always()
