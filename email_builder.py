@@ -212,6 +212,8 @@ class EmailBuilder:
         total = dados.get("total_publicacoes", 0)
         lista = "".join(f"<li>{_esc(s)}</li>" for s in faltantes)
 
+        page_url = config.GITHUB_PAGES_URL
+
         return f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>ALERTA — Boletim incompleto</title></head>
 <body style="margin:0;padding:20px;font-family:-apple-system,Helvetica,Arial,sans-serif;background:#fff;">
@@ -226,8 +228,21 @@ class EmailBuilder:
     O boletim foi enviado com o que foi encontrado. As seções acima podem ter
     sido perdidas por instabilidade da API da Imprensa Nacional.
   </p>
-  <p style="font-size:13px;color:#64748B;margin:20px 0 0;">
+  <p style="font-size:13px;color:#64748B;margin:16px 0 20px;">
     Você pode reexecutar manualmente pelo GitHub Actions se necessário.
   </p>
+  <table cellpadding="0" cellspacing="0"><tr><td>
+    <a href="{_esc(page_url)}" target="_blank" style="
+      display:inline-block;
+      background:#1E3A5F;
+      color:#ffffff;
+      font-family:-apple-system,Helvetica,Arial,sans-serif;
+      font-size:13px;
+      font-weight:600;
+      padding:10px 24px;
+      border-radius:6px;
+      text-decoration:none;
+    ">Abrir boletim disponível →</a>
+  </td></tr></table>
 </div>
 </body></html>"""
