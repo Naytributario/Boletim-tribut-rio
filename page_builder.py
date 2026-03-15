@@ -434,13 +434,14 @@ body {{
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
+  background: var(--gray-100);
   border-bottom: 1px solid var(--gray-200);
   border-radius: 4px;
   padding: 8px 6px;
   margin: 0 -6px;
 }}
 .orgao-header:hover {{
-  background: var(--gray-50);
+  background: var(--gray-200);
 }}
 .orgao-chevron {{
   font-size: 11px;
@@ -909,8 +910,4 @@ document.addEventListener('keydown', function(e) {{
       ticking = true;
     }}
   }}, {{ passive: true }});
-}})();
-</script>
-
-</body>
-</html>"""
+}})()
