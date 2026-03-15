@@ -1,11 +1,19 @@
 """
 email_builder.py — E-mail de notificação com saudação + link para o site
 
-O conteúdo completo vive na página web (GitHub Pages).
-O e-mail é um convite elegante com:
-  - Saudação personalizada (Bom dia + nome)
-  - Resumo das seções
-  - Botão para abrir o boletim no navegador
+Visual: como se alguém tivesse digitado o e-mail e inserido o link depois.
+Não é um template de newsletter corporativa — é uma mensagem pessoal
+com design limpo.
+
+Modelo EXATO (Diva):
+  1. "Bom dia, [Nome]!" ou "Bom dia!" (sem nome se teste)
+  2. "Seu boletim do Diário Oficial de hoje já está disponível."
+  3. Banner "Inclui Edições Extras de DD/MM/YYYY" (se houver)
+  4. "Hoje temos X publicações dos órgãos monitorados."
+  5. Resumo por seção
+  6. "É só clicar no link abaixo, e começar o dia atualizado!"
+  7. Botão "Abrir boletim completo"
+  8. "Que você tenha um excelente e abençoado dia."
 """
 
 import html as html_mod
@@ -34,7 +42,7 @@ def _esc(t):
 class EmailBuilder:
 
     def build(self, dados: dict, nome_destinatario: str = "") -> Optional[str]:
-        """Gera o HTML do e-mail. Recebe nome do destinatário para saudação."""
+        """Gera o HTML do e-mail seguindo o modelo exato."""
         if not dados.get("secoes") or dados.get("total_publicacoes", 0) == 0:
             return None
 
@@ -48,7 +56,7 @@ class EmailBuilder:
         except Exception:
             data_ext = data_reg
 
-        # Saudação
+        # ── 1. Saudação ──
         hora = datetime.now().hour
         if hora < 12:
             saudacao = "Bom dia"
@@ -57,34 +65,40 @@ class EmailBuilder:
         else:
             saudacao = "Boa noite"
 
-        nome = nome_destinatario.split()[0] if nome_destinatario else ""
-        saudacao_completa = f"{saudacao}, {nome}!" if nome else f"{saudacao}!"
+        nome = nome_destinatario.strip().split()[0] if nome_destinatario and nome_destinatario.strip() else ""
+        if nome:
+            saudacao_linha = f"{saudacao}, {nome}!"
+        else:
+            saudacao_linha = f"{saudacao}!"
 
-        # Resumo por seção
-        resumo_rows = []
+        # ── 3. Banner extra (condicional) ──
+        extra_html = ""
+        if data_extra and any("Extra" in k for k in dados["secoes"]):
+            extra_html = f"""
+              <p style="margin:12px 0;padding:10px 14px;background:#FEF2F2;border-left:3px solid #B91C1C;border-radius:0 4px 4px 0;font-size:13px;color:#991B1B;font-weight:600;">
+                ⚡ Inclui Edições Extras de {_esc(data_extra)}
+              </p>"""
+
+        # ── 5. Resumo por seção ──
+        resumo_lines = []
         for sec, orgaos in dados["secoes"].items():
             cnt = sum(len(p) for p in orgaos.values())
             is_ex = "Extra" in sec
             dot_c = "#B91C1C" if is_ex else "#1E3A5F"
-            resumo_rows.append(f"""
-            <tr><td style="padding:4px 0;">
-              <span style="display:inline-block;width:7px;height:7px;background:{dot_c};border-radius:50%;margin-right:10px;vertical-align:middle;"></span>
-              <span style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:13px;color:#475569;">{_esc(sec)}</span>
-              <span style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;color:#0F172A;margin-left:6px;">{cnt}</span>
-            </td></tr>""")
+            resumo_lines.append(
+                f'<span style="display:inline-block;width:7px;height:7px;'
+                f'background:{dot_c};border-radius:50%;margin-right:8px;'
+                f'vertical-align:middle;"></span>'
+                f'<span style="color:#475569;">{_esc(sec)}</span> '
+                f'<strong style="color:#0F172A;">{cnt}</strong>'
+            )
+        resumo_html = "<br>".join(resumo_lines)
 
-        # Banner extra
-        extra_html = ""
-        if data_extra and any("Extra" in k for k in dados["secoes"]):
-            extra_html = f"""
-            <tr><td style="padding:0 0 16px;">
-              <div style="background:#FEF2F2;border-left:3px solid #B91C1C;padding:10px 14px;border-radius:0 4px 4px 0;">
-                <span style="font-size:12px;color:#991B1B;font-weight:600;">⚡ Inclui Edições Extras de {_esc(data_extra)}</span>
-              </div>
-            </td></tr>"""
-
-        # URL do boletim
         page_url = config.GITHUB_PAGES_URL
+
+        # ── ESTILO: fonte consistente, como e-mail digitado ──
+        f = "font-family:Georgia,'Times New Roman',serif;"
+        fs = "font-family:-apple-system,Helvetica,Arial,sans-serif;"
 
         return f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -92,10 +106,7 @@ class EmailBuilder:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Boletim DOU — {_esc(data_reg)}</title>
-<style>
-  body,table,td,p {{margin:0;padding:0;}}
-  a {{color:#2563EB;}}
-</style>
+<style>body,table,td,p{{margin:0;padding:0;}}a{{color:#2563EB;}}</style>
 </head>
 <body style="margin:0;padding:0;background:#E8ECF1;">
 
@@ -110,50 +121,52 @@ class EmailBuilder:
 
 <!-- HEADER -->
 <tr><td style="background:#0F172A;padding:24px 32px;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td>
-        <p style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;margin:0;">BOLETIM DOU</p>
-        <p style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:10px;color:#94A3B8;margin:4px 0 0;letter-spacing:1.5px;text-transform:uppercase;">Seções 1, 2 e 3</p>
-      </td>
-      <td align="right" valign="top">
-        <span style="display:inline-block;background:#1E3A5F;color:#E2E8F0;font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;">{total} atos</span>
-      </td>
-    </tr>
-  </table>
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td>
+      <p style="{f}font-size:22px;font-weight:700;color:#fff;margin:0;">BOLETIM DOU</p>
+      <p style="{fs}font-size:10px;color:#94A3B8;margin:4px 0 0;letter-spacing:1.5px;text-transform:uppercase;">Seções 1, 2 e 3</p>
+    </td>
+    <td align="right" valign="top">
+      <span style="display:inline-block;background:#1E3A5F;color:#E2E8F0;{fs}font-size:12px;font-weight:600;padding:4px 12px;border-radius:4px;">{total} atos</span>
+    </td>
+  </tr></table>
 </td></tr>
 
 <!-- DATA -->
 <tr><td style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;padding:12px 32px;">
-  <p style="font-family:Georgia,serif;font-size:14px;color:#334155;margin:0;">{_esc(data_ext)}</p>
+  <p style="{f}font-size:14px;color:#334155;margin:0;">{_esc(data_ext)}</p>
 </td></tr>
 
-<!-- SAUDAÇÃO -->
-<tr><td style="padding:28px 32px 8px;">
-  <p style="font-family:Georgia,serif;font-size:18px;color:#0F172A;margin:0;font-weight:600;">{_esc(saudacao_completa)}</p>
-  <p style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:13px;color:#64748B;margin:10px 0 0;line-height:1.6;">
-    Seu boletim do Diário Oficial da União está pronto. Hoje temos <strong style="color:#0F172A;">{total} publicações</strong> dos órgãos monitorados.
-  </p>
-</td></tr>
+<!-- CORPO — como e-mail digitado -->
+<tr><td style="padding:28px 32px 28px;">
 
-<!-- RESUMO -->
-<tr><td style="padding:16px 32px;">
-  <p style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 8px;">Nesta edição</p>
-  <table cellpadding="0" cellspacing="0">
-    {"".join(resumo_rows)}
-  </table>
-</td></tr>
+  <!-- 1. Saudação -->
+  <p style="{f}font-size:17px;color:#0F172A;margin:0 0 14px;font-weight:600;">{_esc(saudacao_linha)}</p>
 
-{extra_html}
+  <!-- 2. Frase fixa -->
+  <p style="{fs}font-size:14px;color:#475569;margin:0 0 6px;line-height:1.7;">Seu boletim do Diário Oficial de hoje já está disponível.</p>
 
-<!-- BOTÃO -->
-<tr><td style="padding:8px 32px 28px;" align="center">
-  <table cellpadding="0" cellspacing="0"><tr><td>
+  <!-- 3. Banner extra -->
+  {extra_html}
+
+  <!-- 4. Contagem -->
+  <p style="{fs}font-size:14px;color:#475569;margin:12px 0 14px;line-height:1.7;">Hoje temos <strong style="color:#0F172A;">{total} publicações</strong> dos órgãos monitorados.</p>
+
+  <!-- 5. Resumo por seção -->
+  <div style="{fs}font-size:13px;line-height:2.0;margin:0 0 18px;padding:12px 16px;background:#F8FAFC;border-radius:6px;border:1px solid #E2E8F0;">
+    {resumo_html}
+  </div>
+
+  <!-- 6. Chamada -->
+  <p style="{fs}font-size:14px;color:#475569;margin:0 0 20px;line-height:1.7;">É só clicar no link abaixo, e começar o dia atualizado!</p>
+
+  <!-- 7. Botão — como link inserido depois de digitar -->
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td>
     <a href="{_esc(page_url)}" target="_blank" style="
       display:inline-block;
       background:#1E3A5F;
       color:#ffffff;
-      font-family:-apple-system,Helvetica,Arial,sans-serif;
+      {fs}
       font-size:14px;
       font-weight:600;
       padding:14px 36px;
@@ -162,14 +175,15 @@ class EmailBuilder:
       letter-spacing:0.3px;
     ">Abrir boletim completo →</a>
   </td></tr></table>
-  <p style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:11px;color:#94A3B8;margin:10px 0 0;">
-    Abre no navegador com busca e seções interativas
-  </p>
+
+  <!-- 8. Encerramento -->
+  <p style="{f}font-size:14px;color:#64748B;margin:24px 0 0;line-height:1.7;font-style:italic;">Que você tenha um excelente e abençoado dia.</p>
+
 </td></tr>
 
 <!-- FOOTER -->
 <tr><td style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:18px 32px;">
-  <p style="font-family:-apple-system,Helvetica,Arial,sans-serif;font-size:10px;color:#94A3B8;text-align:center;line-height:1.7;margin:0;">
+  <p style="{fs}font-size:10px;color:#94A3B8;text-align:center;line-height:1.7;margin:0;">
     Fonte: <a href="https://www.in.gov.br/consulta" style="color:#64748B;">Imprensa Nacional</a><br>
     <span style="font-size:9px;color:#CBD5E1;">Para cancelar, responda com DESCADASTRAR</span>
   </p>
@@ -187,3 +201,33 @@ class EmailBuilder:
         t = dados.get("total_publicacoes", 0)
         ex = " + Ed. Extra" if any("Extra" in k for k in dados.get("secoes", {})) else ""
         return f"Boletim DOU Tributário — {d}{ex} — {t} ato(s)"
+
+    def build_alerta_incompleto(self, dados: dict) -> Optional[str]:
+        """Gera e-mail de alerta quando o boletim ficou incompleto (Camada 4)."""
+        faltantes = dados.get("secoes_faltantes", [])
+        if not faltantes:
+            return None
+
+        data_reg = dados.get("data_regular", "")
+        total = dados.get("total_publicacoes", 0)
+        lista = "".join(f"<li>{_esc(s)}</li>" for s in faltantes)
+
+        return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>ALERTA — Boletim incompleto</title></head>
+<body style="margin:0;padding:20px;font-family:-apple-system,Helvetica,Arial,sans-serif;background:#fff;">
+<div style="max-width:560px;margin:0 auto;">
+  <h2 style="color:#B91C1C;margin:0 0 16px;">⚠ Boletim DOU — Resultado incompleto</h2>
+  <p style="font-size:14px;color:#334155;line-height:1.7;">
+    O boletim de <strong>{_esc(data_reg)}</strong> foi gerado com <strong>{total} publicações</strong>,
+    mas as seguintes seções regulares não retornaram dados após todas as tentativas:
+  </p>
+  <ul style="font-size:14px;color:#B91C1C;margin:12px 0;line-height:1.8;">{lista}</ul>
+  <p style="font-size:14px;color:#334155;line-height:1.7;">
+    O boletim foi enviado com o que foi encontrado. As seções acima podem ter
+    sido perdidas por instabilidade da API da Imprensa Nacional.
+  </p>
+  <p style="font-size:13px;color:#64748B;margin:20px 0 0;">
+    Você pode reexecutar manualmente pelo GitHub Actions se necessário.
+  </p>
+</div>
+</body></html>"""
