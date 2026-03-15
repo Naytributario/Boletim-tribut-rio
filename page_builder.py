@@ -910,4 +910,8 @@ document.addEventListener('keydown', function(e) {{
       ticking = true;
     }}
   }}, {{ passive: true }});
-}})()
+}})();
+</script>
+
+</body>
+</html>"""
