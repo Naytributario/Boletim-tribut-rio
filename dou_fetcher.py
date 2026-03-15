@@ -83,20 +83,28 @@ class DOUFetcher:
         }
 
         # Edições regulares (Seção 1, 2, 3 — data de HOJE)
-        for secao_id, nome_secao in config.SECOES_REGULARES.items():
-            logger.info(f"▶ {nome_secao} — {data_regular.strftime('%d/%m/%Y')}")
-            orgaos = self._buscar_secao_com_retry(
-                secao_id, data_regular, nome_secao, eh_regular=True
+        # Só busca seções regulares se a data for dia útil.
+        # Em fins de semana e feriados, o DOU não publica — ausência é esperada.
+        if eh_dia_util(data_regular):
+            for secao_id, nome_secao in config.SECOES_REGULARES.items():
+                logger.info(f"▶ {nome_secao} — {data_regular.strftime('%d/%m/%Y')}")
+                orgaos = self._buscar_secao_com_retry(
+                    secao_id, data_regular, nome_secao, eh_regular=True
+                )
+                if orgaos:
+                    resultado["secoes"][nome_secao] = orgaos
+                    n = sum(len(v) for v in orgaos.values())
+                    resultado["total_publicacoes"] += n
+                    logger.info(f"  ✓ {n} publicação(ões) relevante(s)")
+                else:
+                    logger.warning(f"  ⚠ {nome_secao} retornou VAZIO após todas as tentativas")
+                    resultado["completo"] = False
+                    resultado["secoes_faltantes"].append(nome_secao)
+        else:
+            logger.info(
+                f"  {data_regular.strftime('%d/%m/%Y')} não é dia útil — "
+                "seções regulares ignoradas (fim de semana ou feriado)"
             )
-            if orgaos:
-                resultado["secoes"][nome_secao] = orgaos
-                n = sum(len(v) for v in orgaos.values())
-                resultado["total_publicacoes"] += n
-                logger.info(f"  ✓ {n} publicação(ões) relevante(s)")
-            else:
-                logger.warning(f"  ⚠ {nome_secao} retornou VAZIO após todas as tentativas")
-                resultado["completo"] = False
-                resultado["secoes_faltantes"].append(nome_secao)
 
         # Edições extras (data do DIA ÚTIL ANTERIOR)
         if data_extra:
