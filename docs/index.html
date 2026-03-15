@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Boletim DOU — 14/03/2026</title>
+<title>Boletim DOU — 15/03/2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -26,18 +26,20 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
   font-family: var(--font-sans);
   background: var(--gray-100);
   color: var(--gray-900);
   line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ═══ HEADER ═══ */
 .header {
   background: var(--navy);
   padding: 28px 24px 22px;
+  flex-shrink: 0;
 }
 .header-inner {
   max-width: var(--max-w);
@@ -70,11 +72,11 @@ body {
   white-space: nowrap;
 }
 
-/* ═══ DATA BAR ═══ */
 .data-bar {
   background: #fff;
   border-bottom: 1px solid var(--gray-200);
   padding: 14px 24px;
+  flex-shrink: 0;
 }
 .data-bar-inner {
   max-width: var(--max-w);
@@ -92,14 +94,14 @@ body {
   margin-top: 2px;
 }
 
-/* ═══ CONTAINER ═══ */
 .container {
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 20px 24px 60px;
+  width: 100%;
+  flex: 1;
 }
 
-/* ═══ BUSCA ═══ */
 .search-wrap {
   position: relative;
   margin-bottom: 20px;
@@ -138,7 +140,6 @@ body {
 }
 .search-info.visible { display: block; }
 
-/* ═══ RESUMO ═══ */
 .resumo {
   background: #fff;
   border-radius: 8px;
@@ -178,7 +179,6 @@ body {
   color: var(--gray-900);
 }
 
-/* ═══ EXTRA BANNER ═══ */
 .extra-banner {
   background: var(--red-light);
   border-left: 3px solid var(--red);
@@ -190,7 +190,6 @@ body {
   color: #991B1B;
 }
 
-/* ═══ SEÇÕES ═══ */
 .secao {
   background: #fff;
   border-radius: 8px;
@@ -262,27 +261,26 @@ body {
 .secao.open .secao-hint {
   opacity: 0;
 }
+
+/* SECAO-CONTEUDO: transição controlada por JS.
+   Quando aberto: max-height animado → depois max-height:none (via JS).
+   Quando fechado: max-height:scrollHeight → max-height:0 (via JS). */
 .secao-conteudo {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.35s ease;
 }
-.secao-conteudo.collapsed {
-  max-height: 0;
-}
 
-/* ═══ ÓRGÃO (colapsável) ═══ */
 .orgao {
   padding: 0 20px;
 }
 .orgao-header {
   display: flex;
   align-items: center;
-  padding: 10px 0 6px;
-  border-bottom: 1px solid var(--gray-200);
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
+  border-bottom: 1px solid var(--gray-200);
   border-radius: 4px;
   padding: 8px 6px;
   margin: 0 -6px;
@@ -302,29 +300,27 @@ body {
 }
 .orgao-nome {
   font-family: var(--font-serif);
-  font-size: 12px;
-  color: var(--gray-500);
-  font-style: italic;
+  font-size: 13.5px;
+  color: var(--gray-700);
+  font-weight: 600;
   flex: 1;
 }
 .orgao-count {
-  font-size: 11px;
-  color: var(--gray-400);
+  font-size: 12px;
+  color: var(--gray-500);
   background: var(--gray-100);
   padding: 1px 8px;
   border-radius: 10px;
   font-weight: 600;
 }
+
+/* ORGAO-PUBS: mesma lógica de max-height → none */
 .orgao-pubs {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
-.orgao-pubs.orgao-collapsed {
-  max-height: 0;
-}
 
-/* ═══ PUBLICAÇÃO ═══ */
 .pub {
   padding: 12px 0;
   border-bottom: 1px solid var(--gray-100);
@@ -377,7 +373,6 @@ body {
 }
 .pub-link:hover { text-decoration: underline; }
 
-/* ═══ HIGHLIGHT BUSCA ═══ */
 mark {
   background: #FEF08A;
   color: inherit;
@@ -385,17 +380,55 @@ mark {
   border-radius: 2px;
 }
 
-/* ═══ FOOTER ═══ */
+/* ═══ BREADCRUMB FIXO (scroll tracker) ═══ */
+.scroll-tracker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 8px 24px;
+  transform: translateY(-100%);
+  transition: transform 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.scroll-tracker.visible {
+  transform: translateY(0);
+}
+.scroll-tracker-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: #94A3B8;
+}
+.scroll-tracker .st-secao {
+  color: #E2E8F0;
+  font-weight: 600;
+}
+.scroll-tracker .st-sep {
+  color: #475569;
+}
+.scroll-tracker .st-orgao {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
 .footer {
   text-align: center;
   padding: 24px;
   font-size: 11px;
   color: var(--gray-400);
   line-height: 1.7;
+  flex-shrink: 0;
 }
 .footer a { color: var(--gray-500); }
 
-/* ═══ RESPONSIVO ═══ */
 @media (max-width: 640px) {
   .header-inner { flex-direction: column; gap: 10px; }
   .container { padding: 12px 12px 40px; }
@@ -406,7 +439,6 @@ mark {
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-inner">
     <div>
@@ -417,25 +449,29 @@ mark {
   </div>
 </div>
 
-<!-- DATA -->
 <div class="data-bar">
   <div class="data-bar-inner">
-    <h2>Sábado, 14 de março de 2026</h2>
-    <div class="hora">Gerado às 23:53 (Brasília)</div>
+    <h2>Domingo, 15 de março de 2026</h2>
+    <div class="hora">Gerado às 00:09 (Brasília)</div>
   </div>
 </div>
 
-<!-- CONTEÚDO -->
-<div class="container">
+<!-- BREADCRUMB FIXO (aparece ao rolar dentro de seções) -->
+<div class="scroll-tracker" id="scrollTracker">
+  <div class="scroll-tracker-inner">
+    <span class="st-secao" id="stSecao"></span>
+    <span class="st-sep" id="stSep">›</span>
+    <span class="st-orgao" id="stOrgao"></span>
+  </div>
+</div>
 
-  <!-- BUSCA -->
+<div class="container">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="Buscar publicações (mínimo 3 caracteres)..." autocomplete="off">
   </div>
   <div class="search-info" id="searchInfo"></div>
 
-  <!-- RESUMO -->
   <div class="resumo">
     <div class="resumo-label">Nesta edição</div>
     <div class="resumo-item"><span class="resumo-dot dot-extra"></span><span class="resumo-nome">Seção 1 — Edição Extra</span><span class="resumo-count">3</span></div>
@@ -446,7 +482,6 @@ mark {
                 <span>⚡</span> Inclui Edições Extras de 13/03/2026
             </div>
 
-  <!-- SEÇÕES -->
   <div id="secoes">
     
         <div class="secao secao-extra" data-secao="Seção 1 — Edição Extra">
@@ -506,128 +541,175 @@ mark {
             </div>
         </div>
   </div>
-
 </div>
 
-<!-- FOOTER -->
 <div class="footer">
   Fonte: <a href="https://www.in.gov.br/consulta" target="_blank">Imprensa Nacional</a><br>
   Órgãos: Poderes Executivo, Legislativo e Judiciário · Presidência da República · Min. da Fazenda · Entidades de Fiscalização
 </div>
 
 <script>
-// ═══ COLAPSAR/EXPANDIR SEÇÕES ═══
+// ═══════════════════════════════════════════════════════════
+// COLAPSAR / EXPANDIR — com max-height:none após transição
+// Isso ELIMINA o bug de corte de conteúdo.
+//
+// Lógica:
+//   ABRIR: max-height = scrollHeight → transição → transitionend → max-height = none
+//   FECHAR: max-height = scrollHeight (fixo) → reflow → max-height = 0 → transição
+// ═══════════════════════════════════════════════════════════
+
+function expandPanel(panel) {
+  // Remove listener antigo se existir
+  panel.removeEventListener('transitionend', panel._onExpanded);
+
+  // Listener que seta max-height:none quando a animação terminar
+  panel._onExpanded = function handler(e) {
+    if (e.propertyName === 'max-height') {
+      panel.style.maxHeight = 'none';
+      panel.style.overflow = 'visible';
+      panel.removeEventListener('transitionend', handler);
+    }
+  };
+  panel.addEventListener('transitionend', panel._onExpanded);
+
+  // Iniciar animação
+  panel.style.overflow = 'hidden';
+  panel.style.maxHeight = panel.scrollHeight + 'px';
+}
+
+function collapsePanel(panel) {
+  // Remove listener de expansão se estiver pendente
+  if (panel._onExpanded) {
+    panel.removeEventListener('transitionend', panel._onExpanded);
+  }
+
+  // Se já está com max-height:none, precisa fixar o valor atual
+  // para que a transição CSS funcione (none → 0 não anima)
+  panel.style.overflow = 'hidden';
+  panel.style.maxHeight = panel.scrollHeight + 'px';
+
+  // Forçar reflow para o browser registrar o valor fixo
+  panel.offsetHeight; // eslint-disable-line no-unused-expressions
+
+  // Agora animar para 0
+  panel.style.maxHeight = '0';
+}
+
 function toggleSecao(header) {
-  const secao = header.closest('.secao');
-  const conteudo = secao.querySelector('.secao-conteudo');
-  const isOpen = secao.classList.contains('open');
+  var secao = header.closest('.secao');
+  var conteudo = secao.querySelector('.secao-conteudo');
+  var isOpen = secao.classList.contains('open');
 
   if (isOpen) {
-    conteudo.style.maxHeight = '0';
+    collapsePanel(conteudo);
     secao.classList.remove('open');
   } else {
-    conteudo.style.maxHeight = conteudo.scrollHeight + 'px';
+    expandPanel(conteudo);
     secao.classList.add('open');
   }
 }
 
-// ═══ COLAPSAR/EXPANDIR ÓRGÃOS ═══
 function toggleOrgao(header) {
-  const orgao = header.closest('.orgao');
-  const pubs = orgao.querySelector('.orgao-pubs');
-  const isOpen = orgao.classList.contains('open');
+  var orgao = header.closest('.orgao');
+  var pubs = orgao.querySelector('.orgao-pubs');
+  var isOpen = orgao.classList.contains('open');
 
   if (isOpen) {
-    pubs.style.maxHeight = '0';
+    collapsePanel(pubs);
     orgao.classList.remove('open');
   } else {
-    pubs.style.maxHeight = pubs.scrollHeight + 'px';
+    expandPanel(pubs);
     orgao.classList.add('open');
-    // Recalcular max-height da seção pai (que agora tem mais conteúdo)
-    const secaoConteudo = orgao.closest('.secao-conteudo');
-    if (secaoConteudo) {
-      setTimeout(() => {
-        secaoConteudo.style.maxHeight = secaoConteudo.scrollHeight + 'px';
-      }, 50);
+
+    // Atualizar o painel pai (seção) se ele ainda tiver max-height fixo
+    var secaoConteudo = orgao.closest('.secao-conteudo');
+    if (secaoConteudo && secaoConteudo.style.maxHeight !== 'none') {
+      // Pai ainda está em transição — atualizar após expansão do órgão
+      secaoConteudo.style.maxHeight = secaoConteudo.scrollHeight + pubs.scrollHeight + 'px';
     }
+    // Se pai já tem max-height:none, ele cresce automaticamente — nada a fazer.
   }
 }
 
-// Seções começam FECHADAS — usuário clica para expandir
+// ═══ ABRIR PROGRAMÁTICO (para busca) ═══
+function openSecao(secao) {
+  if (secao.classList.contains('open')) return;
+  var conteudo = secao.querySelector('.secao-conteudo');
+  expandPanel(conteudo);
+  secao.classList.add('open');
+}
+
+function openOrgao(orgao) {
+  if (orgao.classList.contains('open')) return;
+  var pubs = orgao.querySelector('.orgao-pubs');
+  expandPanel(pubs);
+  orgao.classList.add('open');
+}
+
+function closeOrgao(orgao) {
+  if (!orgao.classList.contains('open')) return;
+  var pubs = orgao.querySelector('.orgao-pubs');
+  collapsePanel(pubs);
+  orgao.classList.remove('open');
+}
 
 // ═══ BUSCA EM TEMPO REAL ═══
-const searchInput = document.getElementById('searchInput');
-const searchInfo = document.getElementById('searchInfo');
+var searchInput = document.getElementById('searchInput');
+var searchInfo = document.getElementById('searchInfo');
 
 searchInput.addEventListener('input', function() {
-  const query = this.value.trim().toLowerCase();
+  var query = this.value.trim().toLowerCase();
 
   // Limpar highlights anteriores
-  document.querySelectorAll('mark').forEach(m => {
+  document.querySelectorAll('mark').forEach(function(m) {
     m.replaceWith(m.textContent);
   });
 
   if (query.length < 3) {
-    // Mostrar tudo, colapsar órgãos de volta
-    document.querySelectorAll('.pub').forEach(p => p.classList.remove('hidden'));
-    document.querySelectorAll('.orgao').forEach(o => {
+    // Mostrar tudo, colapsar órgãos
+    document.querySelectorAll('.pub').forEach(function(p) { p.classList.remove('hidden'); });
+    document.querySelectorAll('.orgao').forEach(function(o) {
       o.style.display = '';
-      o.classList.remove('open');
-      const pubs = o.querySelector('.orgao-pubs');
-      if (pubs) pubs.style.maxHeight = '0';
+      closeOrgao(o);
     });
-    document.querySelectorAll('.secao').forEach(s => s.style.display = '');
+    document.querySelectorAll('.secao').forEach(function(s) { s.style.display = ''; });
     searchInfo.classList.remove('visible');
-    // Recalcular max-height das seções abertas
-    document.querySelectorAll('.secao.open .secao-conteudo').forEach(c => {
-      c.style.maxHeight = c.scrollHeight + 'px';
-    });
     return;
   }
 
-  let totalVisible = 0;
+  var totalVisible = 0;
 
   // Filtrar publicações
-  document.querySelectorAll('.pub').forEach(pub => {
-    const text = pub.getAttribute('data-search') || '';
+  document.querySelectorAll('.pub').forEach(function(pub) {
+    var text = pub.getAttribute('data-search') || '';
     if (text.includes(query)) {
       pub.classList.remove('hidden');
       totalVisible++;
-      // Highlight
       highlightText(pub, query);
     } else {
       pub.classList.add('hidden');
     }
   });
 
-  // Esconder órgãos sem publicações visíveis, expandir os com resultados
-  document.querySelectorAll('.orgao').forEach(orgao => {
-    const visiblePubs = orgao.querySelectorAll('.pub:not(.hidden)');
+  // Esconder órgãos sem pubs visíveis, expandir os que têm
+  document.querySelectorAll('.orgao').forEach(function(orgao) {
+    var visiblePubs = orgao.querySelectorAll('.pub:not(.hidden)');
     if (visiblePubs.length === 0) {
       orgao.style.display = 'none';
     } else {
       orgao.style.display = '';
-      // Expandir órgão se tem resultados
-      if (!orgao.classList.contains('open')) {
-        orgao.classList.add('open');
-        const pubs = orgao.querySelector('.orgao-pubs');
-        if (pubs) pubs.style.maxHeight = pubs.scrollHeight + 'px';
-      }
+      openOrgao(orgao);
     }
   });
 
-  // Esconder seções sem órgãos visíveis, expandir as com resultados
-  document.querySelectorAll('.secao').forEach(secao => {
-    const visibleOrgaos = secao.querySelectorAll('.orgao:not([style*="display: none"])');
-    secao.style.display = visibleOrgaos.length === 0 ? 'none' : '';
-    // Expandir seções com resultados
-    if (visibleOrgaos.length > 0 && !secao.classList.contains('open')) {
-      toggleSecao(secao.querySelector('.secao-header'));
-    }
-    // Atualizar max-height
-    const conteudo = secao.querySelector('.secao-conteudo');
-    if (conteudo && secao.classList.contains('open')) {
-      setTimeout(() => { conteudo.style.maxHeight = conteudo.scrollHeight + 'px'; }, 60);
+  // Esconder seções sem órgãos visíveis, expandir as que têm
+  document.querySelectorAll('.secao').forEach(function(secao) {
+    var visibleOrgaos = secao.querySelectorAll('.orgao:not([style*="display: none"])');
+    if (visibleOrgaos.length === 0) {
+      secao.style.display = 'none';
+    } else {
+      secao.style.display = '';
+      openSecao(secao);
     }
   });
 
@@ -636,27 +718,27 @@ searchInput.addEventListener('input', function() {
 });
 
 function highlightText(container, query) {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-  const nodes = [];
+  var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  var nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
 
-  nodes.forEach(node => {
-    const text = node.textContent;
-    const lower = text.toLowerCase();
-    const idx = lower.indexOf(query);
+  nodes.forEach(function(node) {
+    var text = node.textContent;
+    var lower = text.toLowerCase();
+    var idx = lower.indexOf(query);
     if (idx === -1) return;
     if (node.parentElement.tagName === 'MARK') return;
     if (node.parentElement.tagName === 'SCRIPT') return;
     if (node.parentElement.tagName === 'STYLE') return;
 
-    const before = text.slice(0, idx);
-    const match = text.slice(idx, idx + query.length);
-    const after = text.slice(idx + query.length);
+    var before = text.slice(0, idx);
+    var match = text.slice(idx, idx + query.length);
+    var after = text.slice(idx + query.length);
 
-    const mark = document.createElement('mark');
+    var mark = document.createElement('mark');
     mark.textContent = match;
 
-    const parent = node.parentNode;
+    var parent = node.parentNode;
     parent.insertBefore(document.createTextNode(before), node);
     parent.insertBefore(mark, node);
     node.textContent = after;
@@ -664,12 +746,75 @@ function highlightText(container, query) {
 }
 
 // Atalho: Ctrl+K ou / para focar na busca
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', function(e) {
   if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {
     e.preventDefault();
     searchInput.focus();
   }
 });
+
+// ═══ SCROLL TRACKER (breadcrumb fixo) ═══
+// Mostra "Seção X › Órgão Y" conforme o usuário rola a página.
+// Só aparece quando está dentro de uma seção aberta.
+(function() {
+  var tracker = document.getElementById('scrollTracker');
+  var stSecao = document.getElementById('stSecao');
+  var stSep = document.getElementById('stSep');
+  var stOrgao = document.getElementById('stOrgao');
+  var lastSecao = '';
+  var lastOrgao = '';
+  var ticking = false;
+
+  function updateTracker() {
+    var secaoAtual = '';
+    var orgaoAtual = '';
+    var viewportTop = window.scrollY + 60; // offset para o tracker não cobrir
+
+    // Encontrar a última seção aberta cujo topo passou do viewport
+    var secoes = document.querySelectorAll('.secao.open');
+    for (var i = 0; i < secoes.length; i++) {
+      var rect = secoes[i].getBoundingClientRect();
+      // A seção está visível se seu topo está acima do meio da tela
+      // e seu bottom está abaixo do topo da tela
+      if (rect.top < 120 && rect.bottom > 0) {
+        secaoAtual = secoes[i].getAttribute('data-secao') || '';
+
+        // Dentro dessa seção, encontrar o último órgão aberto visível
+        var orgaos = secoes[i].querySelectorAll('.orgao.open');
+        for (var j = 0; j < orgaos.length; j++) {
+          var oRect = orgaos[j].getBoundingClientRect();
+          if (oRect.top < 120 && oRect.bottom > 0) {
+            orgaoAtual = orgaos[j].getAttribute('data-orgao') || '';
+          }
+        }
+      }
+    }
+
+    // Atualizar DOM só se mudou (evitar repaints)
+    if (secaoAtual !== lastSecao || orgaoAtual !== lastOrgao) {
+      lastSecao = secaoAtual;
+      lastOrgao = orgaoAtual;
+
+      if (secaoAtual) {
+        stSecao.textContent = secaoAtual;
+        stSep.style.display = orgaoAtual ? '' : 'none';
+        stOrgao.textContent = orgaoAtual;
+        tracker.classList.add('visible');
+      } else {
+        tracker.classList.remove('visible');
+      }
+    }
+
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(updateTracker);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
 </script>
 
 </body>
